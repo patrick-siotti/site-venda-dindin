@@ -1,4 +1,4 @@
-from peewee import *
+from peewee import * # type: ignore
 
 db = SqliteDatabase('database.db')
 

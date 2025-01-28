@@ -62,8 +62,8 @@ def header():
         github()
     )
 
-def lista_dindin(user_dindin=None):
-  if not data.Dindin.select().where(data.Dindin.estoque > 0):
+def lista_dindin(user_dindin=''):
+  if not data.Dindin.select().where(data.Dindin.estoque > 0): # type: ignore
     return H1(cls='text-2xl')('Nenhum dindin para comprar agora, volte mais tarde')
   return Section(cls='flex flex-wrap justify-center', id='venda')(
     *[Div(cls='card bg-secondary w-[340px] shadow-md m-2')(

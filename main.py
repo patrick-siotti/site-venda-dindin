@@ -1,4 +1,4 @@
-from fasthtml.common import *
+from fasthtml.common import * # type: ignore
 from dotenv import load_dotenv, get_key, set_key, unset_key
 from uuid import uuid4
 from datetime import datetime, timedelta
@@ -12,22 +12,22 @@ def before(session):
   if 'dindins' not in session:
     session['dindins'] = dict()
 
-app, rt = fast_app(debug=True, live=True, before=before)
+app, rt = fast_app(debug=True, live=True, before=before) # type: ignore
 
 @rt('/')
-def get(session):
+def get(session): # type: ignore
   escolha_usuario = session.get('dindins')
   return components.html(
     'DinDins',
     Main(cls='container')(
       components.header(),
       components.lista_dindin(escolha_usuario),
-      components.botao_finalizar(session),
+      components.botao_finalizar(session) if data.Dindin.select().where(data.Dindin.estoque > 0) else None, # type: ignore
     )
   )
 
 @rt('/add_dindin')
-def post(session, mais:str=None, menos:str=None):
+def post(session, mais:str=None, menos:str=None): # type: ignore
   dindin = data.Dindin.get_or_none(data.Dindin.nome == mais if mais else data.Dindin.nome == menos)
   if not dindin:
     return
@@ -50,11 +50,21 @@ def post(session, mais:str=None, menos:str=None):
   return components.botao_finalizar(session), components.lista_dindin(session_dindin)
 
 @rt('/finalizar')
-def get(session):
+def get(session): # type: ignore
   return Redirect('/carrinho')
 
 @rt('/carrinho')
-def get(session):
+def get(session): # type: ignore
+  if not session['dindins']:
+    return Redirect('/')
+  
+  remover = []
+  for dindin in session['dindins']:
+    if not data.Dindin.get_or_none(data.Dindin.nome == dindin):
+      remover.append(dindin)
+  for dindin in remover:
+    del session['dindins'][dindin]
+      
   if not session['dindins']:
     return Redirect('/')
   
@@ -67,7 +77,7 @@ def get(session):
   )
 
 @rt('/send_whats')
-def get(session):
+def get(session): # type: ignore
   if 'link' in session:
     session['dindins'] = dict()
     link = session['link']
@@ -77,7 +87,7 @@ def get(session):
     return Redirect('/')
 
 @rt('/adm')
-def get(session):
+def get(session): # type: ignore
   if verifica_sessao(session):
     return Redirect('/adm/ok')
   
@@ -89,7 +99,7 @@ def get(session):
   )
 
 @rt('/auth/login')
-def post(session, user:str=None, passw:str=None):
+def post(session, user:str='', passw:str=''): # type: ignore
   if verifica_sessao(session):
     return Redirect('/adm/ok')
   
@@ -137,7 +147,7 @@ def get(session):
   )
 
 @rt('/config/login')
-def post(user:str=None, passw:str=None):
+def post(user:str='', passw:str=''): # type: ignore
   path = '.env'
   
   if not user or not passw:
@@ -149,7 +159,7 @@ def post(user:str=None, passw:str=None):
   return components.manda_alerta(True, f'usuario trocado para: {user}, senha trocada para: {passw}')
   
 @rt('/config/numero')
-def post(num:str=None):
+def post(num:str=''): # type: ignore
   path = '.env'
   
   if not num:
@@ -160,9 +170,9 @@ def post(num:str=None):
   return components.manda_alerta(True, f'numero de contato trocado para {num}')
 
 @rt('/config/dindin')
-def post(id:int, nome:str, info:str, ingre:str, estoque:int, valor:float):
+def post(id:int, nome:str, info:str, ingre:str, estoque:int, valor:float): # type: ignore
   try:
-    dindin = data.Dindin.get(data.Dindin.id == id)
+    dindin = data.Dindin.get(data.Dindin.id == id) # type: ignore
     
     dindin.nome = nome
     dindin.info = info
@@ -177,9 +187,9 @@ def post(id:int, nome:str, info:str, ingre:str, estoque:int, valor:float):
     return components.manda_alerta(False, f'ouve um erro desconhecido.')
 
 @rt('/config/delete')
-def post(id:int):
+def post(id:int): # type: ignore
   try:
-    dindin = data.Dindin.get(data.Dindin.id == id)
+    dindin = data.Dindin.get(data.Dindin.id == id) # type: ignore
     dindin.delete_instance()
     
     return components.manda_alerta(True, f'deletado com sucesso!'), components.muda_dindin()
